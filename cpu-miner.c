@@ -104,7 +104,7 @@ static inline void affine_to_cpu(int id, int cpu)
 #endif
 }
 #endif
-		
+
 enum workio_commands {
 	WC_GET_WORK,
 	WC_SUBMIT_WORK,
@@ -182,7 +182,7 @@ struct option {
 };
 #endif
 
-// CB 
+// CB
 static char const usage[] = "\
 Usage: " PROGRAM_NAME " [OPTIONS]\n\
 Options:\n\
@@ -248,7 +248,7 @@ static char const short_options[] =
 #ifdef HAVE_SYSLOG_H
 	"S"
 #endif
-	"a:c:Dhp:Px:qr:R:s:t:T:o:u:O:Vd:l:i:C:m:H:"; // CB 
+	"a:c:Dhp:Px:qr:R:s:t:T:o:u:O:Vd:l:i:C:m:H:"; // CB
 
 static struct option const options[] = {
 	{ "algo", 1, NULL, 'a' },
@@ -278,7 +278,7 @@ static struct option const options[] = {
 	{ "user", 1, NULL, 'u' },
 	{ "userpass", 1, NULL, 'O' },
 	{ "version", 0, NULL, 'V' },
-	{ "no-autotune", 0, NULL, 1004 }, // CB 
+	{ "no-autotune", 0, NULL, 1004 }, // CB
 	{ "devices", 1, NULL, 'd' },
 	{ "launch-config", 1, NULL, 'l' },
 	{ "interactive", 1, NULL, 'i' },
@@ -326,7 +326,7 @@ static bool jobj_binary(const json_t *obj, const char *key,
 static bool work_decode(const json_t *val, struct work *work)
 {
 	int i;
-	
+
 	if (unlikely(!jobj_binary(val, "data", work->data, sizeof(work->data)))) {
 		applog(LOG_ERR, "JSON inval data");
 		goto err_out;
@@ -359,7 +359,7 @@ static void share_result(int result, const char *reason)
 		hashrate += thr_hashrates[i];
 	result ? accepted_count++ : rejected_count++;
 	pthread_mutex_unlock(&stats_lock);
-	
+
 	sprintf(s, hashrate >= 1e6 ? "%.0f" : "%.2f", 1e-3 * hashrate);
 	applog(LOG_INFO, "accepted: %lu/%lu (%.2f%%), %s khash/s %s",
 		   accepted_count,
@@ -578,7 +578,7 @@ static void *workio_thread(void *userdata)
 		case WC_SUBMIT_WORK:
 			ok = workio_submit_work(wc, curl);
 			break;
-		case WC_ABORT:  // CB 
+		case WC_ABORT:  // CB
 		default:		/* should never happen */
 			ok = false;
 			break;
@@ -593,7 +593,7 @@ static void *workio_thread(void *userdata)
 	return NULL;
 }
 
-static void workio_abort() // CB 
+static void workio_abort() // CB
 {
 	struct workio_cmd *wc;
 
@@ -654,7 +654,7 @@ static bool get_work(struct thr_info *thr, struct work *work)
 static bool submit_work(struct thr_info *thr, const struct work *work_in)
 {
 	struct workio_cmd *wc;
-	
+
 	/* fill out work request message */
 	wc = (struct workio_cmd *)calloc(1, sizeof(*wc));
 	if (!wc)
@@ -696,7 +696,7 @@ static void stratum_gen_work(struct stratum_ctx *sctx, struct work *work)
 		memcpy(merkle_root + 32, sctx->job.merkle[i], 32);
 		sha256d(merkle_root, merkle_root, 64);
 	}
-	
+
 	/* Increment extranonce2 */
 	for (i = 0; i < (int)sctx->xnonce2_size && !++sctx->job.xnonce2[i]; i++);
 
@@ -734,7 +734,7 @@ static void *miner_thread(void *userdata)
 	struct work work;
 	uint32_t max_nonce;
 	uint32_t end_nonce = 0xffffffffU / opt_n_threads * (thr_id + 1) - 0x20;
-	// CB 
+	// CB
 	char s[16];
 	int i;
 	memset(&work, 0, sizeof(work)); // CB fix uninitialized variable problem
@@ -793,7 +793,7 @@ static void *miner_thread(void *userdata)
 			work.data[19]++;
 		pthread_mutex_unlock(&g_work_lock);
 		work_restart[thr_id].restart = 0;
-		
+
 		/* adjust max_nonce to meet target scan time */
 		if (have_stratum)
 			max64 = LP_SCANTIME;
@@ -807,7 +807,7 @@ static void *miner_thread(void *userdata)
 			max_nonce = end_nonce;
 		else
 			max_nonce = (uint32_t)(work.data[19] + max64);
-		
+
 		hashes_done = 0;
 		gettimeofday(&tv_start, NULL);
 
@@ -896,7 +896,7 @@ start:
 		lp_url = hdr_path;
 		hdr_path = NULL;
 	}
-	
+
 	/* absolute path, on current server */
 	else {
 		copy_start = (*hdr_path == '/') ? (hdr_path + 1) : hdr_path;
@@ -1038,7 +1038,7 @@ static void *stratum_thread(void *userdata)
 				restart_threads();
 			}
 		}
-		
+
 		if (!stratum_socket_full(&stratum, 120)) {
 			applog(LOG_ERR, "Stratum connection timed out");
 			s = NULL;
@@ -1381,36 +1381,36 @@ void signal_handler(int sig)
 	}
 }
 #else // CB
-BOOL CtrlHandler( DWORD fdwCtrlType ) 
+BOOL CtrlHandler( DWORD fdwCtrlType )
 {
   bool result = (abort_flag == false);
-  switch( fdwCtrlType ) 
-  { 
-    case CTRL_C_EVENT: 
+  switch( fdwCtrlType )
+  {
+    case CTRL_C_EVENT:
       if (result) fprintf(stderr, "Ctrl-C\n" );
       abort_flag = true; restart_threads(); workio_abort();
       return( result );
 
-    case CTRL_CLOSE_EVENT: 
+    case CTRL_CLOSE_EVENT:
       if (result) fprintf(stderr, "Ctrl-Close\n" );
       abort_flag = true; restart_threads(); workio_abort();
       sleep(1);
-      return( result ); 
- 
-    case CTRL_BREAK_EVENT: 
+      return( result );
+
+    case CTRL_BREAK_EVENT:
       if (result) fprintf(stderr, "Ctrl-Break\n" );
       abort_flag = true; restart_threads(); workio_abort();
-      return( result ); 
- 
-    case CTRL_LOGOFF_EVENT: 
+      return( result );
+
+    case CTRL_LOGOFF_EVENT:
       if (result) fprintf(stderr, "Ctrl-Logoff\n" );
       abort_flag = true; restart_threads(); workio_abort();
-      return( result ); 
- 
-    case CTRL_SHUTDOWN_EVENT: 
+      return( result );
+
+    case CTRL_SHUTDOWN_EVENT:
       if (result) fprintf(stderr, "Ctrl-Shutdown\n" );
       abort_flag = true; restart_threads(); workio_abort();
-      return( result ); 
+      return( result );
   }
   return ( FALSE );
 }
@@ -1466,7 +1466,7 @@ int main(int argc, char *argv[])
 		signal(SIGTERM, signal_handler);
 	}
 #else // CB
-    if( SetConsoleCtrlHandler( (PHANDLER_ROUTINE) CtrlHandler, TRUE ) ) 
+    if( SetConsoleCtrlHandler( (PHANDLER_ROUTINE) CtrlHandler, TRUE ) )
     {
 
     }
@@ -1512,7 +1512,7 @@ int main(int argc, char *argv[])
 	thr_info = (struct thr_info *)calloc(opt_n_threads + 3, sizeof(*thr));
 	if (!thr_info)
 		return 1;
-	
+
 	thr_hashrates = (double *) calloc(opt_n_threads, sizeof(double));
 	if (!thr_hashrates)
 		return 1;

@@ -200,6 +200,7 @@ hashtable_t *hashtable_create(key_hash_fn hash_key, key_cmp_fn cmp_keys,
 
     if(hashtable_init(hashtable, hash_key, cmp_keys, free_key, free_value))
     {
+        hashtable_close(hashtable);
         free(hashtable);
         return NULL;
     }

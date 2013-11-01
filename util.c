@@ -77,7 +77,7 @@ void applog(int prio, const char *fmt, ...)
 		va_list ap2;
 		char *buf;
 		int len;
-		
+
 		va_copy(ap2, ap);
 		len = vsnprintf(NULL, 0, fmt, ap2) + 1;
 		va_end(ap2);
@@ -174,7 +174,7 @@ static size_t upload_data_cb(void *ptr, size_t size, size_t nmemb,
 static int seek_data_cb(void *user_data, curl_off_t offset, int origin)
 {
 	struct upload_buffer *ub = (struct upload_buffer *)user_data;
-	
+
 	switch (origin) {
 	case SEEK_SET:
 		ub->pos = (size_t)offset;
@@ -517,7 +517,7 @@ bool fulltest(const uint32_t *hash, const uint32_t *target)
 {
 	int i;
 	bool rc = true;
-	
+
 	for (i = 7; i >= 0; i--) {
 		if (hash[i] > target[i]) {
 			rc = false;
@@ -532,7 +532,7 @@ bool fulltest(const uint32_t *hash, const uint32_t *target)
 	if (opt_debug) {
 		uint32_t hash_be[8], target_be[8];
 		char *hash_str, *target_str;
-		
+
 		for (i = 0; i < 8; i++) {
 			be32enc(hash_be + i, hash[7 - i]);
 			be32enc(target_be + i, target[7 - i]);
@@ -557,7 +557,7 @@ void diff_to_target(uint32_t *target, double diff)
 {
 	uint64_t m;
 	int k;
-	
+
 	for (k = 6; k > 0 && diff > 1.0; k--)
 		diff /= 4294967296.0;
 	m = (uint64_t)(4294901760.0 / diff);
@@ -579,7 +579,7 @@ void diff_to_target(uint32_t *target, double diff)
 static bool send_line(curl_socket_t sock, char *s)
 {
 	ssize_t len, sent = 0;
-	
+
 	len = strlen(s);
 	s[len++] = '\n';
 
@@ -750,7 +750,7 @@ bool stratum_connect(struct stratum_ctx *sctx, const char *url)
 		sctx->url = strdup(url);
 	}
 	free(sctx->curl_url);
-	sctx->curl_url = (char*)malloc(strlen(url));
+	sctx->curl_url = (char*)malloc(strlen(url)+1);
 	sprintf(sctx->curl_url, "http%s", strstr(url, "://"));
 
 	if (opt_protocol)
@@ -1092,7 +1092,7 @@ static bool stratum_reconnect(struct stratum_ctx *sctx, json_t *params)
 		port = json_integer_value(port_val);
 	if (!host || !port)
 		return false;
-	
+
 	free(sctx->url);
 	sctx->url = (char*)malloc(32 + strlen(host));
 	sprintf(sctx->url, "stratum+tcp://%s:%d", host, port);
@@ -1109,7 +1109,7 @@ static bool stratum_get_version(struct stratum_ctx *sctx, json_t *id)
 	char *s;
 	json_t *val;
 	bool ret;
-	
+
 	if (!id || json_is_null(id))
 		return false;
 
@@ -1134,7 +1134,7 @@ static bool stratum_show_message(struct stratum_ctx *sctx, json_t *id, json_t *p
 	val = json_array_get(params, 0);
 	if (val)
 		applog(LOG_NOTICE, "MESSAGE FROM SERVER: %s", json_string_value(val));
-	
+
 	if (!id || json_is_null(id))
 		return true;
 

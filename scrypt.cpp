@@ -51,17 +51,17 @@ class uint32x4_t
 {
 public:
 #if WIN32
-    void * operator new(size_t size) _THROW1(_STD bad_alloc) { void *p; if ((p = _aligned_malloc(size, 16)) == 0) { static const std::bad_alloc nomem; _RAISE(nomem); } return (p); }
+    void * operator new(size_t size) _THROW1(_STD bad_alloc) { void *p = 0; if ((p = _aligned_malloc(size, 16)) == 0) { static const std::bad_alloc nomem; _RAISE(nomem); } return (p); }
     void operator delete(void *p) { _aligned_free(p); }
-    void * operator new[](size_t size) _THROW1(_STD bad_alloc) { void *p; if ((p = _aligned_malloc(size, 16)) == 0) { static const std::bad_alloc nomem; _RAISE(nomem); } return (p); }
+    void * operator new[](size_t size) _THROW1(_STD bad_alloc) { void *p = 0; if ((p = _aligned_malloc(size, 16)) == 0) { static const std::bad_alloc nomem; _RAISE(nomem); } return (p); }
     void operator delete[](void *p) { _aligned_free(p); }
 #else
-    void * operator new(size_t size) throw(std::bad_alloc) { void *p; if (posix_memalign(&p, 16, size) < 0) { static const std::bad_alloc nomem; throw nomem; } return (p); }
+    void * operator new(size_t size) throw(std::bad_alloc) { void *p = 0; if (posix_memalign(&p, 16, size) < 0) { static const std::bad_alloc nomem; throw nomem; } return (p); }
     void operator delete(void *p) { free(p); }
-    void * operator new[](size_t size) throw(std::bad_alloc) { void *p; if (posix_memalign(&p, 16, size) < 0) { static const std::bad_alloc nomem; throw nomem; } return (p); }
+    void * operator new[](size_t size) throw(std::bad_alloc) { void *p = 0; if (posix_memalign(&p, 16, size) < 0) { static const std::bad_alloc nomem; throw nomem; } return (p); }
     void operator delete[](void *p) { free(p); }
 #endif
-    uint32x4_t() { };
+    uint32x4_t() : val() { };
     uint32x4_t(const __m128i init) { val = init; }
     uint32x4_t(const uint32_t init) { val = _mm_set1_epi32((int)init); }
     uint32x4_t(const uint32_t a, const uint32_t b, const uint32_t c, const uint32_t d) { val = _mm_setr_epi32((int)a,(int)b,(int)c,(int)d); }
@@ -400,7 +400,7 @@ static inline void sha256d_msx4(uint32x4_t *hash, uint32x4_t *W,
 
 	for (i = 0; i < 8; i++)
 		S[i] += midstate[i];
-	
+
 	W[18] = S[18];
 	W[19] = S[19];
 	W[20] = S[20];
@@ -409,7 +409,7 @@ static inline void sha256d_msx4(uint32x4_t *hash, uint32x4_t *W,
 	W[24] = S[24];
 	W[30] = S[30];
 	W[31] = S[31];
-	
+
 	for (i=8; i<16; ++i)
 		S[i] = sha256d_hash1[i];
 	S[16] = s1(sha256d_hash1[14]) + sha256d_hash1[ 9] + s0(S[ 1]) + S[ 0];
@@ -493,7 +493,7 @@ static inline void sha256d_msx4(uint32x4_t *hash, uint32x4_t *W,
 	RNDr(hash, S, 54);
 	RNDr(hash, S, 55);
 	RNDr(hash, S, 56);
-	
+
 	hash[2] += hash[6] + S1(hash[3]) + Ch(hash[3], hash[4], hash[5])
 	         + S[57] + sha256_k[57];
 	hash[1] += hash[5] + S1(hash[2]) + Ch(hash[2], hash[3], hash[4])
@@ -559,7 +559,7 @@ static inline void PBKDF2_SHA256_80_128x4(const uint32x4_t *tstate,
 
 	memcpy(istate, tstate, 4*32);
 	sha256_transformx4(istate, salt, 0);
-	
+
 	memcpy(ibuf, salt + 16, 4*16);
 	memcpy(ibuf + 5, innerpadx4, 4*44);
 	memcpy(obuf + 8, outerpadx4, 4*32);
@@ -581,7 +581,7 @@ static inline void PBKDF2_SHA256_128_32x4(uint32x4_t *tstate, uint32x4_t *ostate
 {
 	uint32x4_t buf[16];
 	int i;
-	
+
 	sha256_transformx4(tstate, salt, 1);
 	sha256_transformx4(tstate, salt + 16, 1);
 	sha256_transformx4(tstate, finalblkx4, 0);
@@ -648,7 +648,7 @@ static inline void PBKDF2_SHA256_80_128(const uint32_t *tstate,
 
 	memcpy(istate, tstate, 32);
 	sha256_transform(istate, salt, 0);
-	
+
 	memcpy(ibuf, salt + 16, 16);
 	memcpy(ibuf + 5, innerpad, 44);
 	memcpy(obuf + 8, outerpad, 32);
@@ -670,7 +670,7 @@ static inline void PBKDF2_SHA256_128_32(uint32_t *tstate, uint32_t *ostate,
 {
 	uint32_t buf[16];
 	int i;
-	
+
 	sha256_transform(tstate, salt, 1);
 	sha256_transform(tstate, salt + 16, 1);
 	sha256_transform(tstate, finalblk, 0);
@@ -712,14 +712,14 @@ int scanhash_scrypt(int thr_id, uint32_t *pdata,
 	uint32_t midstate[8];
 	sha256_init(midstate);
 	sha256_transform(midstate, pdata, 0);
-	
+
 	for (i = 0; i < throughput/4; ++i) {
 		for (int j = 0; j < 20; j++) {
 			datax4[0][20*i+j] = uint32x4_t(pdata[j]);
 			datax4[1][20*i+j] = uint32x4_t(pdata[j]);
 		}
 	}
-	
+
 	int z = 0, zz = 1;
 
 	nonce[z] = n+1;
@@ -774,8 +774,9 @@ int scanhash_scrypt(int thr_id, uint32_t *pdata,
 				for (int k = (share_workload*share)/4; k < (share_workload*(share+1))/4 && k < throughput/4; k++) {
 					for (int l = 0; l < 8; l++)
 						tstatex4[zz][k * 8 + l] = uint32x4_t(midstate[l]);
-						HMAC_SHA256_80_initx4(&datax4[zz][k * 20], &tstatex4[zz][k * 8], &ostatex4[zz][k * 8]);
-						PBKDF2_SHA256_80_128x4(&tstatex4[zz][k * 8], &ostatex4[zz][k * 8], &datax4[zz][k * 20], &Xx4[zz][k * 32]);
+
+					HMAC_SHA256_80_initx4(&datax4[zz][k * 20], &tstatex4[zz][k * 8], &ostatex4[zz][k * 8]);
+					PBKDF2_SHA256_80_128x4(&tstatex4[zz][k * 8], &ostatex4[zz][k * 8], &datax4[zz][k * 20], &Xx4[zz][k * 32]);
 				}
 			}
 #endif
@@ -785,8 +786,9 @@ int scanhash_scrypt(int thr_id, uint32_t *pdata,
 			for (int k = 0; k < throughput/4; k++) {
 				for (int l = 0; l < 8; l++)
 					tstatex4[zz][k * 8 + l] = uint32x4_t(midstate[l]);
-					HMAC_SHA256_80_initx4(&datax4[zz][k * 20], &tstatex4[zz][k * 8], &ostatex4[zz][k * 8]);
-					PBKDF2_SHA256_80_128x4(&tstatex4[zz][k * 8], &ostatex4[zz][k * 8], &datax4[zz][k * 20], &Xx4[zz][k * 32]);
+
+				HMAC_SHA256_80_initx4(&datax4[zz][k * 20], &tstatex4[zz][k * 8], &ostatex4[zz][k * 8]);
+				PBKDF2_SHA256_80_128x4(&tstatex4[zz][k * 8], &ostatex4[zz][k * 8], &datax4[zz][k * 20], &Xx4[zz][k * 32]);
 			}
 		}
 
@@ -814,7 +816,7 @@ int scanhash_scrypt(int thr_id, uint32_t *pdata,
 		if (parallel)
 		{
 #ifdef WIN32
-			parallel_for (0, num_shares, [&](int share) { 
+			parallel_for (0, num_shares, [&](int share) {
 				for (int k = (share_workload*share)/4; k < (share_workload*(share+1))/4 && k < throughput/4; k++) {
 					PBKDF2_SHA256_128_32x4(&tstatex4[z][k * 8], &ostatex4[z][k * 8], &Xx4[z][k * 32], &hashx4[z][k * 8]);
 				}
@@ -845,12 +847,14 @@ int scanhash_scrypt(int thr_id, uint32_t *pdata,
 			if (hash[z][i * 8 + 7] <= Htarg && fulltest(hash[z] + i * 8, ptarget)) {
 
 				// CPU based validation to rule out GPU errors (scalar CPU code)
-				uint32_t ldata[20], tstate[8], ostate[8], inp[32], ref[32], scratch[32768];
+				uint32_t ldata[20], tstate[8], ostate[8], inp[32], ref[32];
+                uint32_t* scratch = new uint32_t[32768];
 				memcpy(ldata, pdata, 80); ldata[19] = nonce[z]+i;
 				memcpy(tstate, midstate, 32);
 				HMAC_SHA256_80_init(ldata, tstate, ostate);
 				PBKDF2_SHA256_80_128(tstate, ostate, ldata, inp);
 				computeGold(inp, ref, scratch);
+                delete [] scratch;
 
 				if (memcmp(&X[z][i * 32], ref, 32*sizeof(uint32_t)) != 0)
 					applog(LOG_INFO, "GPU #%d: %s result does not validate on CPU!", device_map[thr_id], device_name[thr_id]);
@@ -863,7 +867,7 @@ int scanhash_scrypt(int thr_id, uint32_t *pdata,
 		}
 		z = (z+1)&1; zz = (zz+1)&1;
 	} while ((n-throughput) < max_nonce && !work_restart[thr_id].restart);
-	
+
 	*hashes_done = (n-throughput) - pdata[19] + 1;
 	pdata[19] = (n-throughput);
 byebye:

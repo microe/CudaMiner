@@ -73,7 +73,7 @@ static inline void affine_to_cpu(int id, int cpu)
 
 	CPU_ZERO(&set);
 	CPU_SET(cpu, &set);
-	sched_setaffinity(0, sizeof(&set), &set);
+	sched_setaffinity(0, sizeof(set), &set);
 }
 #elif defined(__FreeBSD__) /* FreeBSD specific policy and affinity management */
 #include <sys/cpuset.h>
@@ -391,7 +391,7 @@ static bool submit_upstream_work(CURL *curl, struct work *work)
 		uint32_t ntime, nonce;
 		char *ntimestr, *noncestr, *xnonce2str;
 
-		if (!work->job_id)
+		if (!strlen(work->job_id))
 			return true;
 		le32enc(&ntime, work->data[17]);
 		le32enc(&nonce, work->data[19]);
